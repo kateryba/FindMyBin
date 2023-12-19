@@ -8,7 +8,7 @@ import SwiftData
 
 @Model
 final class Location {
-    @Attribute(.unique) var name: String
+    @Attribute var name: String
     @Relationship(deleteRule: .deny, inverse: \Item.location)
     var items = [Item]()
     

@@ -7,7 +7,8 @@
 
 import SwiftData
 
-@Model final class Item {
+@Model 
+final class Item {
     @Attribute(.unique) var name: String
     var location: Location?
     
