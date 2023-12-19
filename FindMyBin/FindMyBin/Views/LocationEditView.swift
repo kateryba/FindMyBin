@@ -12,14 +12,25 @@ struct LocationEditView: View {
     let location: Location?
     
     @State private var name = ""
+    @State private var errorMessage = ""
+    @State private var isNameAvailableValue = true
     
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) var modelContext
     
     var body: some View {
         VStack {
+            Label(errorMessage, systemImage: "heart")
+                .foregroundColor(.red)
+                .labelStyle(.titleOnly)
+
+            Text(location == nil ? "Add location" : "Edit location")
             Form {
                 TextField("Name", text: $name)
+                    .onChange(of: name) {
+                        isNameAvailableValue = isNameAvailable(for: name, in: modelContext)
+                        errorMessage = isNameAvailableValue ? "" : "This name is already in use"
+                    }
             }
             .onAppear {
                 if let location {
@@ -35,12 +46,25 @@ struct LocationEditView: View {
                 }
             }
             // Require a name to save changes.
-            .disabled(name == "")
+            .disabled(name == "" || !isNameAvailableValue)
             
             Button("Cancel", role: .cancel) {
                 dismiss()
             }
         }
+    }
+    
+    func isNameAvailable(for name: String, in modelContext: ModelContext) -> Bool {
+        let predicate = #Predicate<Location> { $0.name == name }
+        let fetchDescriptor = FetchDescriptor<Location>(predicate: predicate)
+
+        var res = name != ""
+        do {
+            try res = modelContext.fetchCount(fetchDescriptor) == 0
+        }
+        catch {
+        }
+        return res;
     }
     
     private func save() {

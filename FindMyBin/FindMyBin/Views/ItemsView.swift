@@ -10,14 +10,14 @@ import SwiftData
 struct ItemsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Item.name) private var items: [Item]
+    @Query private var locations: [Location]
     @State private var isAddPresented = false
     @State var searchString = ""
 
     var body: some View {
         NavigationStack {
-            VStack() {
-                TextField("Filter", text: $searchString)
-            }
+            TextField("Type in what you're looking for...", text: $searchString)
+                .disableAutocorrection(true)
             List() {
                 ForEach(searchString == "" ? items : items.filter { $0.name.localizedCaseInsensitiveContains(searchString) }) { item in
                     NavigationLink(item.name, value: item)
@@ -32,18 +32,29 @@ struct ItemsView: View {
                     Button(action: { self.isAddPresented = true }) {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel("New Item")
+                }
+                ToolbarItem (placement: .navigationBarTrailing){
+                    EditButton()
                 }
             }
+            .disabled(locations.isEmpty)
             .sheet(isPresented: $isAddPresented) {
                 ItemEditView(item: nil)
             }
             .overlay {
                 if items.isEmpty {
-                    ContentUnavailableView {
-                        Label("No items yet", systemImage: "pawprint.circle")
-                    } description: {
-                        AddItemButton(isActive: $isAddPresented)
+                    if locations.isEmpty
+                    {
+                        ContentUnavailableView {
+                            Label("No locations yet. Add a location first", systemImage: "tray.2.fill")
+                        }
+                    }
+                    else {
+                        ContentUnavailableView {
+                            Label("No items yet", systemImage: "pawprint.circle")
+                        } description: {
+                            AddItemButton(isActive: $isAddPresented)
+                        }
                     }
                 }
             }
