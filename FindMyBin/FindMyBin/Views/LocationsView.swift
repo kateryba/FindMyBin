@@ -9,28 +9,43 @@ import SwiftUI
 import SwiftData
 
 struct LocationsView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \Location.name) private var locations: [Location]
     @State var isAddPresented = false
 
     var body: some View {
         NavigationStack {
-            List(locations) { location in
-                NavigationLink(destination: LocationView(location: location)) {
-                    Text(location.name)
+            List {
+                ForEach(locations) { location in
+                    NavigationLink(destination: LocationView(location: location)) {
+                        Text(location.name)
+                    }
                 }
+                .onDelete(perform: removeLocations)
             }
             .toolbar {
-                Button(action: { self.isAddPresented = true }) {
-                    Image(systemName: "plus")
+                ToolbarItem {
+                    Button(action: { self.isAddPresented = true }) {
+                        Image(systemName: "plus")
+                    }
                 }
-                .accessibilityLabel("New Location")
+                
             }
         }
         .sheet(isPresented: $isAddPresented) {
             LocationEditView(location: nil)
         }
     }
+    
+    private func removeLocations(indexSet: IndexSet) {
+        for index in indexSet {
+            let locationToDelete = locations[index]
+            modelContext.delete(locationToDelete)
+        }
+    }
 }
+
+
 
 @MainActor
 class DataController {
