@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct finalproj_uiApp: App {
+struct FindMyBinApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

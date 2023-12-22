@@ -11,6 +11,7 @@ import SwiftData
 struct ItemEditView: View {
     let item: Item?
     
+    @State private var originalName = ""
     @State private var name = ""
     @State private var selectedLocation: Location?
     @State private var errorMessage = ""
@@ -23,15 +24,21 @@ struct ItemEditView: View {
     
     var body: some View {
         VStack {
-            /*Label(errorMessage, systemImage: "heart")
+            Label(errorMessage, systemImage: "heart")
                 .foregroundColor(.red)
-                .labelStyle(.titleOnly)*/
+                .labelStyle(.titleOnly)
             Text(item == nil ? "Add item" : "Edit item")
             Form {
                 TextField("Name", text: $name)
                     .onChange(of: name) {
-                        isNameAvailableValue = isNameAvailable(for: name, in: modelContext)
-                        errorMessage = isNameAvailableValue ? "" : "This name is already in use"
+                        if name == "" {
+                            errorMessage = ""
+                            isNameAvailableValue = false
+                        }
+                        else {
+                            isNameAvailableValue = isNameAvailable(for: name, in: modelContext)
+                            errorMessage = isNameAvailableValue ? "" : "This name is already in use"
+                        }
                     }
                     .disableAutocorrection(true)
                 
@@ -60,16 +67,21 @@ struct ItemEditView: View {
             if let item {
                 // Edit the incoming item.
                 name = item.name
+                originalName = item.name
                 selectedLocation = item.location
             }
         }
     }
     
-    func isNameAvailable(for name: String, in modelContext: ModelContext) -> Bool {
-        let predicate = #Predicate<Item> { $0.name == name }
+    func isNameAvailable(for newName: String, in modelContext: ModelContext) -> Bool {
+        if newName == originalName {
+            return true
+        }
+        
+        let predicate = #Predicate<Item> { $0.name == newName }
         let fetchDescriptor = FetchDescriptor<Item>(predicate: predicate)
 
-        var res = name != ""
+        var res = false
         do {
             try res = modelContext.fetchCount(fetchDescriptor) == 0
         }

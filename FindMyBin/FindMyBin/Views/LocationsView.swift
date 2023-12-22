@@ -40,7 +40,9 @@ struct LocationsView: View {
     private func removeLocations(indexSet: IndexSet) {
         for index in indexSet {
             let locationToDelete = locations[index]
-            modelContext.delete(locationToDelete)
+            if locationToDelete.items.isEmpty{
+                modelContext.delete(locationToDelete)
+            }
         }
     }
 }

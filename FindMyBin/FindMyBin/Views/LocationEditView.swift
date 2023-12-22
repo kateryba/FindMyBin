@@ -11,6 +11,7 @@ import SwiftData
 struct LocationEditView: View {
     let location: Location?
     
+    @State private var originalName = ""
     @State private var name = ""
     @State private var errorMessage = ""
     @State private var isNameAvailableValue = true
@@ -28,14 +29,21 @@ struct LocationEditView: View {
             Form {
                 TextField("Name", text: $name)
                     .onChange(of: name) {
-                        isNameAvailableValue = isNameAvailable(for: name, in: modelContext)
-                        errorMessage = isNameAvailableValue ? "" : "This name is already in use"
+                        if name == "" {
+                            errorMessage = ""
+                            isNameAvailableValue = false
+                        }
+                        else {
+                            isNameAvailableValue = isNameAvailable(for: name, in: modelContext)
+                            errorMessage = isNameAvailableValue ? "" : "This name is already in use"
+                        }
                     }
             }
             .onAppear {
                 if let location {
                     // Edit the incoming location.
                     name = location.name
+                    originalName = location.name
                 }
             }
             
@@ -54,11 +62,15 @@ struct LocationEditView: View {
         }
     }
     
-    func isNameAvailable(for name: String, in modelContext: ModelContext) -> Bool {
-        let predicate = #Predicate<Location> { $0.name == name }
+    func isNameAvailable(for newName: String, in modelContext: ModelContext) -> Bool {
+        if newName == originalName {
+            return true
+        }
+        
+        let predicate = #Predicate<Location> { $0.name == newName }
         let fetchDescriptor = FetchDescriptor<Location>(predicate: predicate)
 
-        var res = name != ""
+        var res = false
         do {
             try res = modelContext.fetchCount(fetchDescriptor) == 0
         }
